@@ -129,12 +129,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const hash = window.location.hash.replace('#', '').toLowerCase();
       if (hash === 'admin' || hash === 'admin-dashboard' || hash === '/admin') {
-        const isAdmin = localStorage.getItem('aaf_admin_auth') === 'true';
+        const isAdmin = localStorage.getItem('noor_admin_auth') === 'true';
         return isAdmin ? 'admin-dashboard' : 'home';
       }
-      const saved = localStorage.getItem('aaf_current_page');
+      const saved = localStorage.getItem('noor_current_page');
       if (saved === 'admin' || saved === 'admin-dashboard') {
-        const isAdmin = localStorage.getItem('aaf_admin_auth') === 'true';
+        const isAdmin = localStorage.getItem('noor_admin_auth') === 'true';
         return isAdmin ? 'admin-dashboard' : 'home';
       }
       return saved || 'home';
@@ -148,7 +148,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentPageState(page);
     setPageParams(params);
     try {
-      localStorage.setItem('aaf_current_page', page);
+      localStorage.setItem('noor_current_page', page);
       if (page === 'admin' || page === 'admin-dashboard') {
         window.location.hash = 'admin';
       } else if (window.location.hash === '#admin') {
@@ -163,7 +163,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '').toLowerCase();
       if (hash === 'admin' || hash === 'admin-dashboard' || hash === '/admin') {
-        const isAdmin = localStorage.getItem('aaf_admin_auth') === 'true';
+        const isAdmin = localStorage.getItem('noor_admin_auth') === 'true';
         if (isAdmin) {
           setCurrentPageState('admin-dashboard');
         } else {
@@ -178,8 +178,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // State initialization with Seed Data (will sync with Firestore when loaded)
   const [products, setProducts] = useState<Product[]>(() => {
     try {
-      const cached = localStorage.getItem('aaf_cached_products');
-      const deleted: string[] = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
+      const cached = localStorage.getItem('noor_cached_products');
+      const deleted: string[] = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -197,7 +197,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [settings, setSettings] = useState<StoreSettings>(() => {
     try {
-      const saved = localStorage.getItem('aaf_settings');
+      const saved = localStorage.getItem('noor_settings');
       if (saved) {
         return { ...INITIAL_SETTINGS, ...JSON.parse(saved) };
       }
@@ -210,7 +210,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Cart & Toast state
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
-      const saved = localStorage.getItem('aaf_cart');
+      const saved = localStorage.getItem('noor_cart');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -227,7 +227,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Auth State (Admin auth is strictly separate from Customer auth)
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('aaf_admin_auth') === 'true';
+      return localStorage.getItem('noor_admin_auth') === 'true';
     } catch (e) {
       return false;
     }
@@ -235,19 +235,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
-      const isAdmin = localStorage.getItem('aaf_admin_auth') === 'true';
+      const isAdmin = localStorage.getItem('noor_admin_auth') === 'true';
       if (isAdmin) {
         return {
           uid: 'admin_owner',
           email: 'noor@gmail.com',
           fullName: 'Noor Essense',
-          mobile: '7788008892',
+          mobile: '8144334641',
           role: 'superadmin',
           createdAt: new Date().toISOString(),
           status: 'active',
         };
       }
-      const savedCustomer = localStorage.getItem('aaf_customer_profile');
+      const savedCustomer = localStorage.getItem('noor_customer_profile');
       return savedCustomer ? JSON.parse(savedCustomer) : null;
     } catch (e) {
       return null;
@@ -257,11 +257,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Save Cart to LocalStorage
   useEffect(() => {
     try {
-      localStorage.setItem('aaf_cart', JSON.stringify(cart));
+      localStorage.setItem('noor_cart', JSON.stringify(cart));
     } catch (e) {}
   }, [cart]);
 
-  // Firebase Realtime Snapshots & Fallback Sync
+  // Firebase Realtime Snapshots & Fallback Sync (Using isolated collections: noor_essence_*)
   useEffect(() => {
     let unsubscribeProducts: () => void = () => {};
     let unsubscribeCategories: () => void = () => {};
@@ -274,27 +274,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         // 1. Eagerly sync deleted products from Firestore before loading products
         try {
-          const delSnap = await getDoc(doc(db, 'settings', 'deleted_products'));
+          const delSnap = await getDoc(doc(db, 'noor_essence_settings', 'deleted_products'));
           if (delSnap.exists()) {
             const cloudIds = delSnap.data()?.deletedIds || [];
-            const localIds = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
+            const localIds = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
             const combined = Array.from(new Set([...localIds, ...cloudIds]));
-            localStorage.setItem('aaf_deleted_prods', JSON.stringify(combined));
+            localStorage.setItem('noor_deleted_prods', JSON.stringify(combined));
           }
         } catch (e) {}
 
         // Realtime Deleted Products Subscription
         unsubscribeDeleted = onSnapshot(
-          doc(db, 'settings', 'deleted_products'),
+          doc(db, 'noor_essence_settings', 'deleted_products'),
           (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
               const ids: string[] = Array.isArray(data?.deletedIds) ? data.deletedIds : [];
-              const localDeleted: string[] = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
+              const localDeleted: string[] = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
               const mergedDeleted = Array.from(new Set([...localDeleted, ...ids]));
               
               try {
-                localStorage.setItem('aaf_deleted_prods', JSON.stringify(mergedDeleted));
+                localStorage.setItem('noor_deleted_prods', JSON.stringify(mergedDeleted));
               } catch (e) {}
               
               // Filter active products state with merged deleted list
@@ -302,9 +302,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
               // Clean cached products in localStorage
               try {
-                const cached: Product[] = JSON.parse(localStorage.getItem('aaf_cached_products') || '[]');
+                const cached: Product[] = JSON.parse(localStorage.getItem('noor_cached_products') || '[]');
                 const cleaned = cached.filter((p: Product) => !mergedDeleted.includes(p.id));
-                localStorage.setItem('aaf_cached_products', JSON.stringify(cleaned));
+                localStorage.setItem('noor_cached_products', JSON.stringify(cleaned));
               } catch (e) {}
             }
           },
@@ -315,17 +315,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Products Realtime Subscription
         unsubscribeProducts = onSnapshot(
-          collection(db, 'products'),
+          collection(db, 'noor_essence_products'),
           (snapshot) => {
-            const deleted: string[] = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
-            const currentCached: Product[] = JSON.parse(localStorage.getItem('aaf_cached_products') || '[]');
+            const deleted: string[] = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
+            const currentCached: Product[] = JSON.parse(localStorage.getItem('noor_cached_products') || '[]');
             
             const list: Product[] = [];
             if (!snapshot.empty) {
               snapshot.forEach((docSnap) => {
                 const prodId = docSnap.id;
                 if (deleted.includes(prodId)) {
-                  deleteDoc(doc(db, 'products', prodId)).catch(() => {});
+                  deleteDoc(doc(db, 'noor_essence_products', prodId)).catch(() => {});
                   return;
                 }
                 const rawData = docSnap.data() as Product;
@@ -345,7 +345,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 if (!map.has(localProd.id)) {
                   map.set(localProd.id, localProd);
                   // Sync to Firestore now that we are connected!
-                  setDoc(doc(db, 'products', localProd.id), localProd).catch(() => {});
+                  setDoc(doc(db, 'noor_essence_products', localProd.id), localProd).catch(() => {});
                 } else {
                   const cloudProd = map.get(localProd.id)!;
                   const localTime = new Date(localProd.updatedAt || localProd.createdAt || 0).getTime();
@@ -362,13 +362,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             
             setProducts(finalProducts);
             try {
-              localStorage.setItem('aaf_cached_products', JSON.stringify(finalProducts));
+              localStorage.setItem('noor_cached_products', JSON.stringify(finalProducts));
             } catch (e) {}
           },
           (error) => {
             console.warn('Firestore offline fallback for products:', error?.message);
-            const deleted = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
-            const cached = localStorage.getItem('aaf_cached_products');
+            const deleted = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
+            const cached = localStorage.getItem('noor_cached_products');
             if (cached) {
               try {
                 const parsed = JSON.parse(cached);
@@ -384,7 +384,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Categories
         unsubscribeCategories = onSnapshot(
-          collection(db, 'categories'),
+          collection(db, 'noor_essence_categories'),
           (snapshot) => {
             if (!snapshot.empty) {
               const list: Category[] = [];
@@ -394,13 +394,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               setCategories(list);
             } else {
               INITIAL_CATEGORIES.forEach(async (cat) => {
-                await setDoc(doc(db, 'categories', cat.id), cat).catch(() => {});
+                await setDoc(doc(db, 'noor_essence_categories', cat.id), cat).catch(() => {});
               });
             }
           },
           (error) => {
             if (error?.code === 'permission-denied') {
-              handleFirestoreError(error, OperationType.GET, 'categories');
+              handleFirestoreError(error, OperationType.GET, 'noor_essence_categories');
             } else {
               console.warn('Firestore offline fallback for categories:', error?.message);
               setCategories(INITIAL_CATEGORIES);
@@ -408,11 +408,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         );
 
-        // Orders listener moved to reactive effect below
-
         // Banners
         unsubscribeBanners = onSnapshot(
-          collection(db, 'banners'),
+          collection(db, 'noor_essence_banners'),
           (snapshot) => {
             if (!snapshot.empty) {
               const list: Banner[] = [];
@@ -424,7 +422,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           },
           (error) => {
             if (error?.code === 'permission-denied') {
-              handleFirestoreError(error, OperationType.GET, 'banners');
+              handleFirestoreError(error, OperationType.GET, 'noor_essence_banners');
             } else {
               console.warn('Firestore offline fallback for banners:', error?.message);
               setBanners(INITIAL_BANNERS);
@@ -434,24 +432,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Settings
         unsubscribeSettings = onSnapshot(
-          doc(db, 'settings', 'website_content'),
+          doc(db, 'noor_essence_settings', 'website_content'),
           (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data() as StoreSettings;
               
-
-
               const needsUpdate =
                 data.brandName !== 'NOOR ESSENSE ATTAR & PERFUME' ||
-                data.contactPhone !== '7788008892' ||
-                data.whatsappNumber !== '+917788008892' ||
+                data.contactPhone !== '8144334641' ||
+                data.whatsappNumber !== '+918144334641' ||
                 data.adminEmail !== 'noor@gmail.com' ||
                 data.adminPassword !== 'noor0404' ||
                 !data.contactAddress?.toLowerCase().includes('azim') ||
-                data.brandName?.includes('MAZAHIRI') ||
-                data.brandName?.includes('Al Hunaina') ||
-                data.brandName?.includes('Khushboo') ||
-                data.brandName?.includes('A.M') ||
                 data.instagramUrl !== 'https://www.instagram.com/noor_essence_perfume?stkn=MWd4NGMxOHBiYmp0MQ==' ||
                 (data.heroVideoUrl && data.heroVideoUrl !== '');
 
@@ -481,23 +473,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 };
                 setSettings(updated);
                 // Sync to DB immediately so changes persist permanently
-                setDoc(doc(db, 'settings', 'website_content'), updated).catch(() => {});
+                setDoc(doc(db, 'noor_essence_settings', 'website_content'), updated).catch(() => {});
               } else {
-                const cachedCombo = localStorage.getItem('aaf_combo_offer_enabled');
+                const cachedCombo = localStorage.getItem('noor_combo_offer_enabled');
                 const finalCombo = cachedCombo !== null ? cachedCombo === 'true' : (data.comboOfferEnabled ?? true);
                 setSettings({ ...data, comboOfferEnabled: finalCombo });
               }
             } else {
-              setDoc(doc(db, 'settings', 'website_content'), INITIAL_SETTINGS).catch(() => {});
+              setDoc(doc(db, 'noor_essence_settings', 'website_content'), INITIAL_SETTINGS).catch(() => {});
               setSettings(INITIAL_SETTINGS);
             }
           },
           (error) => {
             if (error?.code === 'permission-denied') {
-              handleFirestoreError(error, OperationType.GET, 'settings/website_content');
+              handleFirestoreError(error, OperationType.GET, 'noor_essence_settings/website_content');
             } else {
               console.warn('Firestore offline fallback for settings:', error?.message);
-              const cachedCombo = localStorage.getItem('aaf_combo_offer_enabled');
+              const cachedCombo = localStorage.getItem('noor_combo_offer_enabled');
               const finalCombo = cachedCombo !== null ? cachedCombo === 'true' : true;
               setSettings({ ...INITIAL_SETTINGS, comboOfferEnabled: finalCombo });
             }
@@ -525,12 +517,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           if (isOwnerEmail) {
             setIsAdminLoggedIn(true);
-            localStorage.setItem('aaf_admin_auth', 'true');
+            localStorage.setItem('noor_admin_auth', 'true');
             const profile: UserProfile = {
               uid: user.uid,
               email: user.email || 'noor@gmail.com',
               fullName: settings.ownerName || 'Noor Essense',
-              mobile: settings.contactPhone || '7788008892',
+              mobile: settings.contactPhone || '8144334641',
               role: 'superadmin',
               createdAt: new Date().toISOString(),
               status: 'active',
@@ -538,9 +530,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setCurrentUser(profile);
           } else {
             setIsAdminLoggedIn(false);
-            localStorage.removeItem('aaf_admin_auth');
+            localStorage.removeItem('noor_admin_auth');
             try {
-              const userDocSnap = await getDoc(doc(db, 'users', user.uid));
+              const userDocSnap = await getDoc(doc(db, 'noor_essence_users', user.uid));
               if (userDocSnap.exists()) {
                 const userData = userDocSnap.data() as UserProfile;
                 userData.role = 'customer';
@@ -556,13 +548,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   status: 'active',
                   savedAddresses: [],
                 };
-                localStorage.setItem('aaf_customer_profile', JSON.stringify(profile));
-                await setDoc(doc(db, 'users', user.uid), profile).catch(() => {});
+                localStorage.setItem('noor_customer_profile', JSON.stringify(profile));
+                await setDoc(doc(db, 'noor_essence_users', user.uid), profile).catch(() => {});
                 setCurrentUser(profile);
               }
             } catch (userErr) {
-              // Local fallback if offline or permission error
-              const storedProfile = localStorage.getItem('aaf_customer_profile');
+              const storedProfile = localStorage.getItem('noor_customer_profile');
               if (storedProfile) {
                 try {
                   setCurrentUser(JSON.parse(storedProfile));
@@ -586,7 +577,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           console.error(err);
         }
       } else {
-        const isAdminAuthStored = localStorage.getItem('aaf_admin_auth') === 'true';
+        const isAdminAuthStored = localStorage.getItem('noor_admin_auth') === 'true';
         if (isAdminAuthStored) {
           setIsAdminLoggedIn(true);
           setCurrentUser((prev) => {
@@ -595,7 +586,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               uid: 'admin_owner',
               email: 'noor@gmail.com',
               fullName: settings.ownerName || 'Noor Essense',
-              mobile: settings.contactPhone || '7788008892',
+              mobile: settings.contactPhone || '8144334641',
               role: 'superadmin',
               createdAt: new Date().toISOString(),
               status: 'active',
@@ -604,7 +595,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
           setCurrentUser(null);
           setIsAdminLoggedIn(false);
-          localStorage.removeItem('aaf_customer_profile');
+          localStorage.removeItem('noor_customer_profile');
         }
       }
     });
@@ -629,9 +620,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     let q;
     if (currentUser.role === 'superadmin') {
-      q = collection(db, 'orders');
+      q = collection(db, 'noor_essence_orders');
     } else {
-      q = query(collection(db, 'orders'), where('customerId', '==', currentUser.uid));
+      q = query(collection(db, 'noor_essence_orders'), where('customerId', '==', currentUser.uid));
     }
 
     const unsubscribe = onSnapshot(
@@ -645,8 +636,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       },
       (error) => {
         if (error?.code === 'permission-denied') {
-          // If it's a customer and they don't have orders yet, or if they just signed in
-          console.warn('Orders permission error (expected for some transitions):', error.message);
+          console.warn('Orders permission error:', error.message);
         } else {
           console.error('Orders snapshot error:', error);
         }
@@ -752,15 +742,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       )
     : 0;
 
-  // Free delivery everywhere
   const cartDeliveryFee = 0;
   const cartTotal = Math.max(0, cartSubtotal - cartDiscount + cartDeliveryFee);
 
   // Auth Functions
   const registerCustomer = async (data: { fullName: string; email: string; mobile: string; password: string }) => {
     setIsAdminLoggedIn(false);
-    localStorage.removeItem('aaf_admin_auth');
-    localStorage.removeItem('aaf_current_page');
+    localStorage.removeItem('noor_admin_auth');
+    localStorage.removeItem('noor_current_page');
     try {
       const userCred = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const profile: UserProfile = {
@@ -773,13 +762,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         status: 'active',
         savedAddresses: [],
       };
-      await setDoc(doc(db, 'users', userCred.user.uid), profile);
+      await setDoc(doc(db, 'noor_essence_users', userCred.user.uid), profile);
       setCurrentUser(profile);
-      localStorage.setItem('aaf_customer_profile', JSON.stringify(profile));
+      localStorage.setItem('noor_customer_profile', JSON.stringify(profile));
       showToast('Account created successfully!');
       return { success: true, message: 'Registration successful', isAdmin: false };
     } catch (err: any) {
-      // Fallback local simulation if firebase auth fails in preview
       const fallbackUid = 'user_' + Date.now();
       const profile: UserProfile = {
         uid: fallbackUid,
@@ -792,7 +780,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         savedAddresses: [],
       };
       setCurrentUser(profile);
-      localStorage.setItem('aaf_customer_profile', JSON.stringify(profile));
+      localStorage.setItem('noor_customer_profile', JSON.stringify(profile));
       showToast('Account created successfully!');
       return { success: true, message: 'Registration successful', isAdmin: false };
     }
@@ -803,7 +791,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const cleanEmail = isEmail ? emailOrMobile.trim().toLowerCase() : `${emailOrMobile.trim()}@customer.nooressence.com`;
     const cleanPass = password.trim();
 
-    // Store Owner Admin Check
     const ownerEmail = (settings.adminEmail || 'noor@gmail.com').trim().toLowerCase();
     const ownerPass = (settings.adminPassword || 'noor0404').trim();
 
@@ -838,9 +825,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    // For ANY regular customer: Strictly clear any leftover admin state
     setIsAdminLoggedIn(false);
-    localStorage.removeItem('aaf_admin_auth');
+    localStorage.removeItem('noor_admin_auth');
     if (window.location.hash === '#admin') {
       try {
         history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -849,7 +835,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       const userCred = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const userDocRef = doc(db, 'users', userCred.user.uid);
+      const userDocRef = doc(db, 'noor_essence_users', userCred.user.uid);
       const userDocSnap = await getDoc(userDocRef);
       let profile: UserProfile;
       if (userDocSnap.exists()) {
@@ -868,18 +854,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         await setDoc(userDocRef, profile).catch(() => {});
       }
       setIsAdminLoggedIn(false);
-      localStorage.removeItem('aaf_admin_auth');
+      localStorage.removeItem('noor_admin_auth');
       setCurrentUser(profile);
-      localStorage.setItem('aaf_customer_profile', JSON.stringify(profile));
+      localStorage.setItem('noor_customer_profile', JSON.stringify(profile));
       showToast(`Welcome back to ${settings.brandName || "NOOR ESSENSE ATTAR & PERFUME"}`);
       return { success: true, message: 'Logged in successfully', isAdmin: false };
     } catch (err: any) {
-      // Offline / Local Customer Session Fallback
       const profile: UserProfile = {
         uid: 'cust_' + (isEmail ? btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, '').slice(0, 10) : emailOrMobile),
         email: cleanEmail,
         fullName: 'Valued Fragrance Customer',
-        mobile: emailOrMobile.includes('@') ? '+91 7788008892' : emailOrMobile,
+        mobile: emailOrMobile.includes('@' ) ? '+91 8144334641' : emailOrMobile,
         role: 'customer',
         createdAt: new Date().toISOString(),
         status: 'active',
@@ -887,7 +872,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           {
             id: 'addr-1',
             name: 'Home',
-            mobile: '+91 7788008892',
+            mobile: '+91 8144334641',
             address: 'Park street azim enterprises inside room, Berhampur, ganjam, odisha 760002',
             city: 'Berhampur',
             state: 'Odisha',
@@ -897,9 +882,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ],
       };
       setIsAdminLoggedIn(false);
-      localStorage.removeItem('aaf_admin_auth');
+      localStorage.removeItem('noor_admin_auth');
       setCurrentUser(profile);
-      localStorage.setItem('aaf_customer_profile', JSON.stringify(profile));
+      localStorage.setItem('noor_customer_profile', JSON.stringify(profile));
       showToast('Welcome back to your customer account!');
       return { success: true, message: 'Logged in successfully', isAdmin: false };
     }
@@ -908,9 +893,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const logoutUser = async () => {
     setIsAdminLoggedIn(false);
     setCurrentUser(null);
-    localStorage.removeItem('aaf_admin_auth');
-    localStorage.removeItem('aaf_customer_profile');
-    localStorage.removeItem('aaf_current_page');
+    localStorage.removeItem('noor_admin_auth');
+    localStorage.removeItem('noor_customer_profile');
+    localStorage.removeItem('noor_current_page');
     try {
       await signOut(auth);
     } catch (e) {}
@@ -928,8 +913,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updated = { ...currentUser, ...data };
     setCurrentUser(updated);
     try {
-      localStorage.setItem('aaf_customer_profile', JSON.stringify(updated));
-      await updateDoc(doc(db, 'users', currentUser.uid), data);
+      localStorage.setItem('noor_customer_profile', JSON.stringify(updated));
+      await updateDoc(doc(db, 'noor_essence_users', currentUser.uid), data);
     } catch (e) {}
     showToast('Profile updated');
   };
@@ -949,7 +934,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await updateCustomerProfile({ savedAddresses: updated });
   };
 
-  // Dedicated Admin Authentication (Strictly for Store Owners)
   const loginAdmin = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
@@ -972,14 +956,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isAuthorizedEmail && isAuthorizedPassword) {
       setIsAdminLoggedIn(true);
-      localStorage.setItem('aaf_admin_auth', 'true');
-      localStorage.setItem('aaf_current_page', 'admin-dashboard');
+      localStorage.setItem('noor_admin_auth', 'true');
+      localStorage.setItem('noor_current_page', 'admin-dashboard');
       window.location.hash = 'admin';
       const profile: UserProfile = {
         uid: 'admin_owner',
         email: cleanEmail,
         fullName: settings.ownerName || 'Noor Essense',
-        mobile: settings.contactPhone || '7788008892',
+        mobile: settings.contactPhone || '8144334641',
         role: 'superadmin',
         createdAt: new Date().toISOString(),
         status: 'active',
@@ -988,7 +972,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCurrentPage('admin-dashboard');
       showToast('Admin Panel Unlocked Successfully!');
 
-      // Background sync with Firebase Auth
       signInWithEmailAndPassword(auth, cleanEmail, cleanPass).catch(() => {
         createUserWithEmailAndPassword(auth, cleanEmail, cleanPass).catch(() => {});
       });
@@ -999,14 +982,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       setIsAdminLoggedIn(true);
-      localStorage.setItem('aaf_admin_auth', 'true');
-      localStorage.setItem('aaf_current_page', 'admin-dashboard');
+      localStorage.setItem('noor_admin_auth', 'true');
+      localStorage.setItem('noor_current_page', 'admin-dashboard');
       window.location.hash = 'admin';
       const profile: UserProfile = {
         uid: userCred.user.uid,
         email: userCred.user.email || email,
         fullName: settings.ownerName || 'Noor Essense',
-        mobile: settings.contactPhone || '7788008892',
+        mobile: settings.contactPhone || '8144334641',
         role: 'superadmin',
         createdAt: new Date().toISOString(),
         status: 'active',
@@ -1023,9 +1006,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const logoutAdmin = async () => {
     setIsAdminLoggedIn(false);
     setCurrentUser(null);
-    localStorage.removeItem('aaf_admin_auth');
-    localStorage.removeItem('aaf_customer_profile');
-    localStorage.removeItem('aaf_current_page');
+    localStorage.removeItem('noor_admin_auth');
+    localStorage.removeItem('noor_customer_profile');
+    localStorage.removeItem('noor_current_page');
     try {
       await signOut(auth);
     } catch (e) {}
@@ -1042,7 +1025,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const createOrder = async (orderData: Omit<Order, 'id' | 'orderId' | 'createdAt'>): Promise<Order> => {
     const orderCount = orders.length + 1;
     const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const formattedId = `AH-2026-${String(orderCount).padStart(3, '0')}-${randomSuffix}`;
+    const formattedId = `NOOR-2026-${String(orderCount).padStart(3, '0')}-${randomSuffix}`;
 
     const newOrder: Order = {
       ...orderData,
@@ -1052,12 +1035,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updatedAt: new Date().toISOString(),
     };
 
-    // Update state locally
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Save to Firestore
     try {
-      await setDoc(doc(db, 'orders', formattedId), newOrder);
+      await setDoc(doc(db, 'noor_essence_orders', formattedId), newOrder);
     } catch (e) {
       console.warn('Order saved locally (Firestore offline/error):', e);
     }
@@ -1087,7 +1068,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     try {
-      const ref = doc(db, 'orders', orderId);
+      const ref = doc(db, 'noor_essence_orders', orderId);
       await updateDoc(ref, {
         status,
         ...(trackingNumber && { trackingNumber }),
@@ -1115,28 +1096,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updatedAt: now,
     };
 
-    // Ensure this new ID is cleared from any deleted records
     try {
-      const deleted: string[] = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
+      const deleted: string[] = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
       if (deleted.includes(id)) {
         const cleaned = deleted.filter((d: string) => d !== id);
-        localStorage.setItem('aaf_deleted_prods', JSON.stringify(cleaned));
+        localStorage.setItem('noor_deleted_prods', JSON.stringify(cleaned));
       }
     } catch (e) {}
 
     setProducts((prev) => {
       const updated = [newProduct, ...prev.filter((p) => p.id !== id)];
       try {
-        localStorage.setItem('aaf_cached_products', JSON.stringify(updated));
+        localStorage.setItem('noor_cached_products', JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
 
     try {
-      await setDoc(doc(db, 'products', id), newProduct);
+      await setDoc(doc(db, 'noor_essence_products', id), newProduct);
       showToast(`Product "${newProduct.name}" saved to store!`, 'success');
     } catch (e: any) {
-      console.warn('Firestore add product offline/sync warning (saved locally):', e);
+      console.warn('Firestore add product offline/sync warning:', e);
       showToast(`Product "${newProduct.name}" saved locally!`, 'success');
     }
   };
@@ -1149,52 +1129,48 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts((prev) => {
       const updated = prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
       try {
-        localStorage.setItem('aaf_cached_products', JSON.stringify(updated));
+        localStorage.setItem('noor_cached_products', JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
     try {
-      await setDoc(doc(db, 'products', id), updatedFields, { merge: true });
+      await setDoc(doc(db, 'noor_essence_products', id), updatedFields, { merge: true });
       showToast('Product updated & live for customers!', 'success');
     } catch (e: any) {
-      console.warn('Firestore update product offline/sync warning (saved locally):', e);
+      console.warn('Firestore update product offline/sync warning:', e);
       showToast('Product updated locally!', 'success');
     }
   };
 
   const deleteProduct = async (id: string) => {
-    // 1. Track in local storage deleted list FIRST
-    const deleted = JSON.parse(localStorage.getItem('aaf_deleted_prods') || '[]');
+    const deleted = JSON.parse(localStorage.getItem('noor_deleted_prods') || '[]');
     const updatedDeleted = Array.from(new Set([...deleted, id]));
     try {
-      localStorage.setItem('aaf_deleted_prods', JSON.stringify(updatedDeleted));
+      localStorage.setItem('noor_deleted_prods', JSON.stringify(updatedDeleted));
     } catch (e) {}
 
-    // 2. Immediately remove from UI state and scrub cache
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id && !updatedDeleted.includes(p.id));
       try {
-        localStorage.setItem('aaf_cached_products', JSON.stringify(updated));
+        localStorage.setItem('noor_cached_products', JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
     
     try {
-      const cached = JSON.parse(localStorage.getItem('aaf_cached_products') || '[]');
+      const cached = JSON.parse(localStorage.getItem('noor_cached_products') || '[]');
       const cleaned = cached.filter((p: Product) => p.id !== id && !updatedDeleted.includes(p.id));
-      localStorage.setItem('aaf_cached_products', JSON.stringify(cleaned));
+      localStorage.setItem('noor_cached_products', JSON.stringify(cleaned));
     } catch (e) {}
 
-    // 3. Delete document from Firestore
     try {
-      await deleteDoc(doc(db, 'products', id));
+      await deleteDoc(doc(db, 'noor_essence_products', id));
     } catch (e) {
       console.warn('Firestore delete doc warning:', e);
     }
 
-    // 4. Save permanently to Firestore settings/deleted_products
     try {
-      await setDoc(doc(db, 'settings', 'deleted_products'), {
+      await setDoc(doc(db, 'noor_essence_settings', 'deleted_products'), {
         deletedIds: updatedDeleted,
         updatedAt: new Date().toISOString()
       }, { merge: true });
@@ -1229,7 +1205,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newCat = { ...cat, id };
     setCategories((prev) => [...prev, newCat]);
     try {
-      await setDoc(doc(db, 'categories', id), newCat);
+      await setDoc(doc(db, 'noor_essence_categories', id), newCat);
     } catch (e) {}
     showToast(`Category "${newCat.name}" created`);
   };
@@ -1237,7 +1213,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateCategory = async (id: string, data: Partial<Category>) => {
     setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
     try {
-      await updateDoc(doc(db, 'categories', id), data);
+      await updateDoc(doc(db, 'noor_essence_categories', id), data);
     } catch (e) {}
     showToast('Category updated');
   };
@@ -1245,7 +1221,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteCategory = async (id: string) => {
     setCategories((prev) => prev.filter((c) => c.id !== id));
     try {
-      await deleteDoc(doc(db, 'categories', id));
+      await deleteDoc(doc(db, 'noor_essence_categories', id));
     } catch (e) {}
     showToast('Category deleted');
   };
@@ -1256,7 +1232,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newCoupon = { ...couponData, id };
     setCoupons((prev) => [...prev, newCoupon]);
     try {
-      await setDoc(doc(db, 'coupons', id), newCoupon);
+      await setDoc(doc(db, 'noor_essence_coupons', id), newCoupon);
     } catch (e) {}
     showToast(`Coupon ${newCoupon.code} created`);
   };
@@ -1264,7 +1240,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateCoupon = async (id: string, data: Partial<Coupon>) => {
     setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
     try {
-      await updateDoc(doc(db, 'coupons', id), data);
+      await updateDoc(doc(db, 'noor_essence_coupons', id), data);
     } catch (e) {}
     showToast('Coupon updated');
   };
@@ -1272,7 +1248,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteCoupon = async (id: string) => {
     setCoupons((prev) => prev.filter((c) => c.id !== id));
     try {
-      await deleteDoc(doc(db, 'coupons', id));
+      await deleteDoc(doc(db, 'noor_essence_coupons', id));
     } catch (e) {}
     showToast('Coupon deleted');
   };
@@ -1290,7 +1266,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newBanner = { ...bannerData, id };
     setBanners((prev) => [...prev, newBanner]);
     try {
-      await setDoc(doc(db, 'banners', id), newBanner);
+      await setDoc(doc(db, 'noor_essence_banners', id), newBanner);
     } catch (e) {}
     showToast('Banner added');
   };
@@ -1298,7 +1274,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateBanner = async (id: string, data: Partial<Banner>) => {
     setBanners((prev) => prev.map((b) => (b.id === id ? { ...b, ...data } : b)));
     try {
-      await updateDoc(doc(db, 'banners', id), data);
+      await updateDoc(doc(db, 'noor_essence_banners', id), data);
     } catch (e) {}
     showToast('Banner updated');
   };
@@ -1306,7 +1282,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteBanner = async (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
     try {
-      await deleteDoc(doc(db, 'banners', id));
+      await deleteDoc(doc(db, 'noor_essence_banners', id));
     } catch (e) {}
     showToast('Banner deleted');
   };
@@ -1315,12 +1291,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateSettings = async (newSettings: Partial<StoreSettings>) => {
     const updated = { ...settings, ...newSettings };
     if (newSettings.comboOfferEnabled !== undefined) {
-      localStorage.setItem('aaf_combo_offer_enabled', String(newSettings.comboOfferEnabled));
+      localStorage.setItem('noor_combo_offer_enabled', String(newSettings.comboOfferEnabled));
     }
     setSettings(updated);
     try {
-      localStorage.setItem('aaf_settings', JSON.stringify(updated));
-      await setDoc(doc(db, 'settings', 'website_content'), updated);
+      localStorage.setItem('noor_settings', JSON.stringify(updated));
+      await setDoc(doc(db, 'noor_essence_settings', 'website_content'), updated);
       showToast('Website content settings updated', 'success');
     } catch (e: any) {
       console.error('Firestore update settings error:', e);
@@ -1330,7 +1306,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const submitWholesaleEnquiry = async (data: Omit<WholesaleEnquiry, 'id' | 'createdAt'>) => {
     try {
-      await addDoc(collection(db, 'wholesale_inquiries'), {
+      await addDoc(collection(db, 'noor_essence_wholesale_inquiries'), {
         ...data,
         createdAt: new Date().toISOString(),
       });

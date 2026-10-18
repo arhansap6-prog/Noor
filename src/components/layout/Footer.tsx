@@ -253,8 +253,8 @@ export const Footer: React.FC = () => {
           <button
             onClick={() => {
               if (window.confirm("🔄 Click OK to clear browser cache and reload the latest deployed version instantly!")) {
-                localStorage.removeItem('aaf_cached_products');
-                localStorage.removeItem('aaf_deleted_prods');
+                localStorage.removeItem('noor_cached_products');
+                localStorage.removeItem('noor_deleted_prods');
                 window.location.href = window.location.pathname + '?v=' + Date.now() + '#home';
                 window.location.reload();
               }
